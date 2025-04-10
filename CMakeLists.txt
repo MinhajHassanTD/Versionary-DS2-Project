@@ -8,45 +8,45 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find required packages
 find_package(OpenCV REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Include directories
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${OPENSSL_INCLUDE_DIR})
 
-# Set source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.h")
+# Add source files
+set(SOURCES
+    src/main.cpp
+    src/core/MerkleTree.cpp
+    src/core/Quadtree.cpp
+    src/core/VersionManager.cpp
+    src/cli/CommandParser.cpp
+    src/gui/MainWindow.cpp
+)
 
-# Qt specific setup
+# Add header files
+set(HEADERS
+    src/core/MerkleTree.h
+    src/core/Quadtree.h
+    src/core/VersionManager.h
+    src/cli/CommandParser.h
+    src/gui/MainWindow.h
+)
+
+# Set automoc for Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Create a static library with the core functionality
-add_library(versionary_lib STATIC
-    src/MerkleTree.cpp
-    src/Quadtree.cpp
-    src/ImageProcessor.cpp
-    src/VersionControl.cpp
-)
-
-# Link the library with required dependencies
-target_link_libraries(versionary_lib ${OpenCV_LIBS})
-
-# Add executable
+# Create executable
 add_executable(versionary ${SOURCES} ${HEADERS})
 
 # Link libraries
-target_link_libraries(versionary versionary_lib ${OpenCV_LIBS} Qt5::Widgets)
+target_link_libraries(versionary 
+    ${OpenCV_LIBS}
+    ${OPENSSL_LIBRARIES}
+    Qt5::Widgets
+)
 
-# Create directory structure if it doesn't exist
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources)
-
-# Installation
+# Install target
 install(TARGETS versionary DESTINATION bin)
-
-# Add tests
-add_subdirectory(tests)
