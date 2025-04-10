@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\qasim\Downloads\Spring25\DS2\DS2\build\_deps\googletest-subbuild\CMakeFiles\7c754f2b50d40859b2ad732392c711e7\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{64FB5756-A947-3E01-AD4C-6753787D7A4F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
