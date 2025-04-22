@@ -87,6 +87,20 @@ void GUI::handleCompareImages() {
     std::cin >> version2;
 
     try {
+        // First, check if the inputs are valid integers
+        for (char c : version1) {
+            if (!std::isdigit(c)) {
+                throw std::invalid_argument("Version numbers must be integers");
+            }
+        }
+        
+        for (char c : version2) {
+            if (!std::isdigit(c)) {
+                throw std::invalid_argument("Version numbers must be integers");
+            }
+        }
+        
+        // Now safely convert to integers
         int v1 = std::stoi(version1);
         int v2 = std::stoi(version2);
 
@@ -96,14 +110,26 @@ void GUI::handleCompareImages() {
         }
 
         std::cout << "Comparing versions " << v1 << " and " << v2 << "...\n";
-        // Simulate loading images and comparing
-        cv::Mat dummyImage1 = cv::Mat::zeros(100, 100, CV_8UC1);
-        cv::Mat dummyImage2 = cv::Mat::zeros(100, 100, CV_8UC1);
+        // Create two different dummy images to demonstrate comparison
+        cv::Mat dummyImage1 = cv::Mat::zeros(300, 300, CV_8UC3);
+        cv::Mat dummyImage2 = dummyImage1.clone();
+        
+        // Add some content to the first image
+        cv::circle(dummyImage1, cv::Point(150, 150), 100, cv::Scalar(255, 0, 0), -1);
+        
+        // Add slightly different content to the second image
+        cv::circle(dummyImage2, cv::Point(150, 150), 80, cv::Scalar(0, 0, 255), -1);
+        cv::rectangle(dummyImage2, cv::Rect(50, 50, 80, 60), cv::Scalar(0, 255, 0), -1);
 
+        // Compare and visualize
         cv::Mat differences = ImageComparer::compareImages(dummyImage1, dummyImage2);
         ImageComparer::visualizeDifferences(differences, "differences_output.jpg");
 
         std::cout << "Differences visualized and saved to differences_output.jpg\n";
+    } catch (const std::invalid_argument& e) {
+        showError("Version numbers must be integers");
+    } catch (const std::out_of_range& e) {
+        showError("Version number out of range");
     } catch (const std::exception& e) {
         showError(e.what());
     }
@@ -165,3 +191,4 @@ std::string GUI::hashImageChunk(const cv::Mat& chunk) {
     ss << "chunk_" << mean[0];
     return ss.str();
 }
+//new
