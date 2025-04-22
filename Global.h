@@ -9,3 +9,4 @@ extern std::map<int, std::string> versionRepository;
 extern int currentVersion;
 
 #endif // GLOBAL_H
+//new
