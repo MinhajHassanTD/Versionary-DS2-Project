@@ -107,3 +107,4 @@ void Quadtree::buildTree(std::shared_ptr<QuadtreeNode> node, int minSize) {
     if (node->bottomLeft) buildTree(node->bottomLeft, minSize);
     if (node->bottomRight) buildTree(node->bottomRight, minSize);
 }
+//new
