@@ -14,62 +14,118 @@ cv::Mat ImageComparer::compareImages(const cv::Mat& image1, const cv::Mat& image
         throw std::runtime_error("One or both images are empty");
     }
 
-    // Create a blank difference map (white = no difference, black = difference)
-    cv::Mat diffMap;
+    // Create a copy of the first image to overlay differences on
+    cv::Mat result;
     
-    // If images have different sizes, resize the smaller one
-    if (image1.size() != image2.size()) {
-        cv::Mat resized;
-        if (image1.total() < image2.total()) {
-            cv::resize(image1, resized, image2.size());
-            cv::absdiff(resized, image2, diffMap);
-        } else {
-            cv::resize(image2, resized, image1.size());
-            cv::absdiff(image1, resized, diffMap);
-        }
+    // Ensure the image is in color for highlighting differences
+    if (image1.channels() == 1) {
+        cv::cvtColor(image1, result, cv::COLOR_GRAY2BGR);
     } else {
-        // Calculate absolute difference
-        cv::absdiff(image1, image2, diffMap);
+        image1.copyTo(result);
     }
     
-    return diffMap;
+    // If images have different sizes, resize the second one to match
+    cv::Mat resizedImage2;
+    if (image1.size() != image2.size()) {
+        cv::resize(image2, resizedImage2, image1.size());
+    } else {
+        resizedImage2 = image2;
+    }
+    
+    // Convert both to grayscale for comparison
+    cv::Mat gray1, gray2;
+    if (image1.channels() == 3 || image1.channels() == 4) {
+        cv::cvtColor(image1, gray1, cv::COLOR_BGR2GRAY);
+    } else {
+        gray1 = image1;
+    }
+    
+    if (resizedImage2.channels() == 3 || resizedImage2.channels() == 4) {
+        cv::cvtColor(resizedImage2, gray2, cv::COLOR_BGR2GRAY);
+    } else {
+        gray2 = resizedImage2;
+    }
+    
+    // Calculate absolute difference
+    cv::Mat diffMap;
+    cv::absdiff(gray1, gray2, diffMap);
+    
+    // Apply threshold to identify significant differences
+    cv::Mat thresholdedDiff;
+    cv::threshold(diffMap, thresholdedDiff, 30, 255, cv::THRESH_BINARY);
+    
+    // Find contours of differences
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(thresholdedDiff, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    
+    // Draw contours on the original image with a semi-transparent overlay
+    for (const auto& contour : contours) {
+        // Filter small noise contours (optional)
+        if (cv::contourArea(contour) > 10) {
+            // Draw filled contour with semi-transparency
+            cv::Rect boundingRect = cv::boundingRect(contour);
+            
+            // Create a mask for the current contour
+            cv::Mat mask = cv::Mat::zeros(result.size(), CV_8UC1);
+            cv::drawContours(mask, std::vector<std::vector<cv::Point>>{contour}, 0, cv::Scalar(255), -1);
+            
+            // Create a colored overlay
+            cv::Mat overlay = cv::Mat::zeros(result.size(), result.type());
+            overlay.setTo(cv::Scalar(0, 0, 255), mask); // Red color
+            
+            // Apply the overlay with transparency
+            cv::addWeighted(result, 1.0, overlay, 0.5, 0, result);
+            
+            // Draw a border around the difference area
+            cv::rectangle(result, boundingRect, cv::Scalar(0, 255, 0), 2);
+        }
+    }
+    
+    return result;
 }
 
 // Enhanced comparison using Quadtree and Merkle Tree structures
 std::vector<cv::Rect> ImageComparer::compareWithStructures(const cv::Mat& image1, const cv::Mat& image2, int minChunkSize) {
     std::vector<cv::Rect> diffRegions;
     
-    // Process both images with Quadtree decomposition
-    Quadtree quadtree1(image1, minChunkSize);
-    Quadtree quadtree2(image2, minChunkSize);
-    
-    // Collect hashes from both quadtrees
-    std::vector<std::string> hashes1;
-    std::vector<std::string> hashes2;
-    std::map<std::string, cv::Rect> hashToRegion1;
-    
-    // Collect hashes and build mapping from hash to region
-    collectHashesWithRegions(quadtree1.getRoot(), hashes1, hashToRegion1);
-    
-    // Build Merkle Trees
-    MerkleTree tree1(hashes1);
-    MerkleTree tree2(hashes2);
-    
-    // Compare root hashes
-    if (tree1.getRootHash() == tree2.getRootHash()) {
-        std::cout << "Images are identical according to Merkle Tree comparison" << std::endl;
-        return diffRegions; // Empty no differences
-    }
-    
-    // Find differences by comparing all hashes
-    for (const auto& pair : hashToRegion1) {
-        const std::string& hash = pair.first;
-        const cv::Rect& region = pair.second;
+    try {
+        // Process both images with Quadtree decomposition
+        Quadtree quadtree1(image1, minChunkSize);
+        Quadtree quadtree2(image2, minChunkSize);
         
-        // If this hash from image1 doesn't exist in image2 hashes, it's different
-        if (std::find(hashes2.begin(), hashes2.end(), hash) == hashes2.end()) {
-            diffRegions.push_back(region);
+        // Collect hashes from both quadtrees
+        std::vector<std::string> hashes1;
+        std::vector<std::string> hashes2;
+        std::map<std::string, cv::Rect> hashToRegion1;
+        std::map<std::string, cv::Rect> hashToRegion2;
+        
+        // Collect hashes and build mapping from hash to region
+        collectHashesWithRegions(quadtree1.getRoot(), hashes1, hashToRegion1);
+        collectHashesWithRegions(quadtree2.getRoot(), hashes2, hashToRegion2);
+        
+        // Build Merkle Trees
+        MerkleTree tree1(hashes1);
+        MerkleTree tree2(hashes2);
+        
+        // Compare root hashes
+        if (tree1.getRootHash() == tree2.getRootHash()) {
+            std::cout << "Images are identical according to Merkle Tree comparison" << std::endl;
+            return diffRegions; // Empty, no differences
         }
+        
+        // Find differences by comparing all hashes
+        for (const auto& pair : hashToRegion1) {
+            const std::string& hash = pair.first;
+            const cv::Rect& region = pair.second;
+            
+            // If this hash from image1 doesn't exist in image2 hashes, it's different
+            if (std::find(hashes2.begin(), hashes2.end(), hash) == hashes2.end()) {
+                diffRegions.push_back(region);
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error in compareWithStructures: " << e.what() << std::endl;
     }
     
     return diffRegions;
@@ -109,24 +165,9 @@ void ImageComparer::visualizeDifferences(const cv::Mat& differences, const std::
     if (differences.empty()) {
         throw std::runtime_error("Differences matrix is empty");
     }
-
-    // Apply a threshold to make differences more visible
-    cv::Mat thresholded;
-    cv::threshold(differences, thresholded, 30, 255, cv::THRESH_BINARY);
     
-    // Create a colorized version of the differences
-    cv::Mat colorDiff;
-    
-    // Apply colormap to make differences more visible (check if input is grayscale first)
-    if (thresholded.channels() == 1) {
-        cv::applyColorMap(thresholded, colorDiff, cv::COLORMAP_JET);
-    } else {
-        // If already a color image, use it directly
-        colorDiff = thresholded;
-    }
-
-    // Save the result
-    if (!cv::imwrite(outputPath, colorDiff)) {
+    // Save the result directly (no additional processing)
+    if (!cv::imwrite(outputPath, differences)) {
         throw std::runtime_error("Failed to save the differences to " + outputPath);
     }
     
@@ -150,7 +191,13 @@ void ImageComparer::highlightDifferences(const cv::Mat& image, const std::vector
     
     // Draw rectangles around difference regions
     for (const auto& region : diffRegions) {
-        cv::rectangle(result, region, cv::Scalar(0, 0, 255), 2); // Red rectangle
+        // Create a semi-transparent overlay for the region
+        cv::Mat overlay = result(region).clone();
+        cv::addWeighted(overlay, 0.5, cv::Scalar(0, 0, 255), 0.5, 0, overlay);
+        overlay.copyTo(result(region));
+        
+        // Draw a green border around the difference area
+        cv::rectangle(result, region, cv::Scalar(0, 255, 0), 2);
     }
     
     // Save the result
@@ -160,3 +207,4 @@ void ImageComparer::highlightDifferences(const cv::Mat& image, const std::vector
     
     std::cout << "Differences highlighted and saved to " << outputPath << "\n";
 }
+//new
