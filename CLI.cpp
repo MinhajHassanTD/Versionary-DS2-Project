@@ -68,7 +68,12 @@ void CLI::handleAdd(const std::string& filePath) {
 
         std::cout << "Image added successfully. Root hash: " << rootHash << "\n";
 
+        // Store the version information
         versionRepository[++currentVersion] = rootHash;
+        
+        // Save the image for future reference
+        cv::imwrite("version_" + std::to_string(currentVersion) + ".jpg", image);
+        std::cout << "Image saved as version_" + std::to_string(currentVersion) + ".jpg\n";
 
         std::cout << "Current version repository size: " << versionRepository.size() << "\n";
     } catch (const std::exception& e) {
@@ -118,6 +123,20 @@ void CLI::handleCommit() {
 // Handles the "compare" command
 void CLI::handleCompare(const std::string& version1, const std::string& version2) {
     try {
+        // First, check if the inputs are valid integers
+        for (char c : version1) {
+            if (!std::isdigit(c)) {
+                throw std::invalid_argument("Version numbers must be integers");
+            }
+        }
+        
+        for (char c : version2) {
+            if (!std::isdigit(c)) {
+                throw std::invalid_argument("Version numbers must be integers");
+            }
+        }
+        
+        // Now safely convert to integers
         int v1 = std::stoi(version1);
         int v2 = std::stoi(version2);
 
@@ -128,19 +147,51 @@ void CLI::handleCompare(const std::string& version1, const std::string& version2
 
         std::cout << "Comparing versions " << v1 << " and " << v2 << "...\n";
         
-        // In a real implementation, we would load the actual images here
-        // For now, we create two different dummy images to demonstrate comparison
-        cv::Mat dummyImage1 = cv::Mat::zeros(100, 100, CV_8UC1);
-        cv::Mat dummyImage2 = cv::Mat::ones(100, 100, CV_8UC1) * 255; // White image
+        // Get the filenames of the stored images
+        std::string imagePath1 = "version_" + std::to_string(v1) + ".jpg";
+        std::string imagePath2 = "version_" + std::to_string(v2) + ".jpg";
         
-        // Add some patterns to the images to make differences visible
-        cv::circle(dummyImage1, cv::Point(50, 50), 20, cv::Scalar(255), -1);
-        cv::rectangle(dummyImage2, cv::Rect(30, 30, 40, 40), cv::Scalar(0), -1);
-
-        cv::Mat differences = ImageComparer::compareImages(dummyImage1, dummyImage2);
+        // Load the saved images
+        cv::Mat image1 = cv::imread(imagePath1);
+        cv::Mat image2 = cv::imread(imagePath2);
+        
+        // Check if the images were loaded successfully
+        if (image1.empty() || image2.empty()) {
+            // For demonstration purposes, create dummy images if the saved ones can't be loaded
+            std::cout << "Warning: Could not load saved images. Using dummy images for demonstration.\n";
+            
+            image1 = cv::Mat::zeros(300, 300, CV_8UC3);
+            image2 = image1.clone();
+            
+            // Add some content to the first image
+            cv::circle(image1, cv::Point(150, 150), 100, cv::Scalar(255, 0, 0), -1);
+            cv::putText(image1, "Version " + std::to_string(v1), cv::Point(80, 280), 
+                        cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
+            
+            // Add slightly different content to the second image
+            cv::circle(image2, cv::Point(150, 150), 80, cv::Scalar(0, 0, 255), -1);
+            cv::rectangle(image2, cv::Rect(50, 50, 80, 60), cv::Scalar(0, 255, 0), -1);
+            cv::putText(image2, "Version " + std::to_string(v2), cv::Point(80, 280), 
+                        cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
+        }
+        
+        // Save copies of the images we're comparing
+        cv::imwrite("original_" + std::to_string(v1) + ".jpg", image1);
+        cv::imwrite("original_" + std::to_string(v2) + ".jpg", image2);
+        
+        std::cout << "Original images saved as original_" << std::to_string(v1) << ".jpg and original_" 
+                  << std::to_string(v2) << ".jpg\n";
+        
+        // Compare images and visualize differences directly on the original image
+        cv::Mat differences = ImageComparer::compareImages(image1, image2);
         ImageComparer::visualizeDifferences(differences, "differences_output.jpg");
         
-        // No need to print this message here, it's already printed in visualizeDifferences
+        std::cout << "Differences have been highlighted on the first image and saved to differences_output.jpg\n";
+        
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Error: Version number out of range\n";
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
     }
