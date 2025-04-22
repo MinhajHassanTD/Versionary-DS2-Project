@@ -48,3 +48,4 @@ cv::Mat processImage(const cv::Mat& image, const cv::Rect& roi) {
     // ...existing processing logic...
     return roiImage;
 }
+//new
