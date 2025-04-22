@@ -25,3 +25,4 @@ private:
 };
 
 #endif // IMAGECOMPARER_H
+//new
