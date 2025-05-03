@@ -4,6 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include "Quadtree.h"
 #include "MerkleTree.h"
+#include "Utils.h"  // Add this include
 #include <map>
 #include <sstream>
 
@@ -107,19 +108,29 @@ std::vector<cv::Rect> ImageComparer::compareWithStructures(const cv::Mat& image1
         MerkleTree tree1(hashes1);
         MerkleTree tree2(hashes2);
         
-        // Compare root hashes
-        if (tree1.getRootHash() == tree2.getRootHash()) {
-            std::cout << "Images are identical according to Merkle Tree comparison" << std::endl;
-            return diffRegions; // Empty, no differences
+        // Compare root hashes with similarity threshold
+        if (tree1.getRootHash() == tree2.getRootHash() || 
+            areHashesSimilar(tree1.getRootHash(), tree2.getRootHash(), 5)) {
+            std::cout << "Images are identical or very similar according to Merkle Tree comparison" << std::endl;
+            return diffRegions; // Empty, no significant differences
         }
         
-        // Find differences by comparing all hashes
+        // Find differences by comparing all hashes with similarity threshold
+        int similarityThreshold = 10; // Adjust threshold as needed
         for (const auto& pair : hashToRegion1) {
             const std::string& hash = pair.first;
             const cv::Rect& region = pair.second;
             
-            // If this hash from image1 doesn't exist in image2 hashes, it's different
-            if (std::find(hashes2.begin(), hashes2.end(), hash) == hashes2.end()) {
+            bool foundSimilar = false;
+            for (const auto& h2 : hashes2) {
+                if (areHashesSimilar(hash, h2, similarityThreshold)) {
+                    foundSimilar = true;
+                    break;
+                }
+            }
+            
+            // If no similar hash found in the second image, mark as different
+            if (!foundSimilar) {
                 diffRegions.push_back(region);
             }
         }
@@ -151,12 +162,19 @@ void ImageComparer::collectHashesWithRegions(std::shared_ptr<QuadtreeNode> node,
     }
 }
 
-// Hash function (same as in CLI.cpp and GUI.cpp)
+// Hash function for image chunks
 std::string ImageComparer::hashImageChunk(const cv::Mat& chunk) {
-    cv::Scalar mean = cv::mean(chunk);
-    std::stringstream ss;
-    ss << "chunk_" << mean[0];
-    return ss.str();
+    // Use perceptual hashing instead of mean-based hashing
+    return Utils::computePerceptualHash(chunk);
+}
+
+// Add a method to compare hash similarity
+bool ImageComparer::areHashesSimilar(const std::string& hash1, const std::string& hash2, int threshold) {
+    // Calculate hamming distance between hashes
+    int distance = Utils::hammingDistance(hash1, hash2);
+    
+    // Return true if the hashes are similar enough
+    return distance != -1 && distance <= threshold;
 }
 
 // Visualizes the differences and saves the result to a file
@@ -207,4 +225,3 @@ void ImageComparer::highlightDifferences(const cv::Mat& image, const std::vector
     
     std::cout << "Differences highlighted and saved to " << outputPath << "\n";
 }
-//new
