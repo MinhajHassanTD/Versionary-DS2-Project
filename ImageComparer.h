@@ -22,7 +22,7 @@ private:
                                         std::vector<std::string>& hashes, 
                                         std::map<std::string, cv::Rect>& hashToRegion);
     static std::string hashImageChunk(const cv::Mat& chunk);
+    static bool areHashesSimilar(const std::string& hash1, const std::string& hash2, int threshold);
 };
 
 #endif // IMAGECOMPARER_H
-//new
