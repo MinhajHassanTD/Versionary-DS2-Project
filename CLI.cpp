@@ -100,11 +100,8 @@ void CLI::collectLeafHashes(std::shared_ptr<QuadtreeNode> node, std::vector<std:
 
 // Function to hash an image chunk
 std::string CLI::hashImageChunk(const cv::Mat& chunk) {
-    // Calculate mean pixel value as a simple hash
-    cv::Scalar mean = cv::mean(chunk);
-    std::stringstream ss;
-    ss << "chunk_" << mean[0];
-    return ss.str();
+    // Use perceptual hashing instead of mean-based hashing
+    return Utils::computePerceptualHash(chunk);
 }
 
 // Handles the "commit" command
