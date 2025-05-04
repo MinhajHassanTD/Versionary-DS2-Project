@@ -1,4 +1,4 @@
-C:/Users/qasim/Downloads/Spring25/DS2/DS2/build/CMakeFiles/Versionary.dir
-C:/Users/qasim/Downloads/Spring25/DS2/DS2/build/CMakeFiles/TestConsole.dir
-C:/Users/qasim/Downloads/Spring25/DS2/DS2/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/qasim/Downloads/Spring25/DS2/DS2/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/qasim/Downloads/Spring25/DS2/Versionary-DS2-Project/DS2/build/CMakeFiles/Versionary.dir
+C:/Users/qasim/Downloads/Spring25/DS2/Versionary-DS2-Project/DS2/build/CMakeFiles/TestConsole.dir
+C:/Users/qasim/Downloads/Spring25/DS2/Versionary-DS2-Project/DS2/build/CMakeFiles/edit_cache.dir
+C:/Users/qasim/Downloads/Spring25/DS2/Versionary-DS2-Project/DS2/build/CMakeFiles/rebuild_cache.dir
