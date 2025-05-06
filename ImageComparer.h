@@ -9,13 +9,11 @@
 
 class ImageComparer {
 public:
-    static cv::Mat compareImages(const cv::Mat& image1, const cv::Mat& image2);
+    static cv::Mat compareImages(const cv::Mat& image1, const cv::Mat& image2, int sensitivity = 65);
     static void visualizeDifferences(const cv::Mat& differences, const std::string& outputPath);
     
-    // Enhanced methods using Quadtree and Merkle Tree
-    static std::vector<cv::Rect> compareWithStructures(const cv::Mat& image1, const cv::Mat& image2, int minChunkSize);
+    static std::vector<cv::Rect> compareWithStructures(const cv::Mat& image1, const cv::Mat& image2, int minChunkSize, int sensitivity = 10);
     static void highlightDifferences(const cv::Mat& image, const std::vector<cv::Rect>& diffRegions, const std::string& outputPath);
-    
 private:
     // Helper methods
     static void collectHashesWithRegions(std::shared_ptr<QuadtreeNode> node, 

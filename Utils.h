@@ -19,6 +19,9 @@ public:
     static std::string computePerceptualHash(const cv::Mat& image);
     static int hammingDistance(const std::string& hash1, const std::string& hash2);
     
+    // Fast hashing
+    static std::string computeFastHash(const cv::Mat& image);
+    
 private:
     // Helper methods for perceptual hashing
     static cv::Mat preprocessForHash(const cv::Mat& image);

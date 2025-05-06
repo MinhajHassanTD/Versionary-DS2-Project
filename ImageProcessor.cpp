@@ -11,7 +11,6 @@ cv::Mat ImageProcessor::readImage(const std::string& filePath) {
     if (image.empty()) {
         throw std::runtime_error("Failed to read image from: " + filePath);
     }
-    std::cout << "Image loaded successfully: " << filePath << std::endl;
     return image;
 }
 
@@ -23,15 +22,11 @@ cv::Mat ImageProcessor::convertToGrayscale(const cv::Mat& image) {
 
     cv::Mat grayImage;
     cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
-    std::cout << "Image converted to grayscale" << std::endl;
     return grayImage;
 }
 
+// Processes a specific region (ROI) of an image
 cv::Mat processImage(const cv::Mat& image, const cv::Rect& roi) {
-    // Debug log
-    std::cout << "Processing image with ROI: " << roi << std::endl;
-    std::cout << "Image dimensions: " << image.cols << "x" << image.rows << std::endl;
-
     // Ensure the image is valid
     if (image.empty() || image.cols <= 0 || image.rows <= 0) {
         throw std::runtime_error("Invalid image dimensions for processing");
@@ -43,9 +38,7 @@ cv::Mat processImage(const cv::Mat& image, const cv::Rect& roi) {
         throw std::invalid_argument("Invalid ROI dimensions");
     }
 
-    // Extract ROI and process
+    // Extract ROI
     cv::Mat roiImage = image(roi);
-    // ...existing processing logic...
     return roiImage;
 }
-//new

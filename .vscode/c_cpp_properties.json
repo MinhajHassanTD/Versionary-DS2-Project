@@ -6,18 +6,18 @@
                 "${workspaceFolder}/**",
                 "C:/opencv/build/include",
                 "C:/opencv/build/include/opencv2",
-                "C:/Program Files/OpenSSL-Win64/include"
+                "C:/Program Files/OpenSSL-Win64/include",
+                "C:/Program Files/OpenSSL-Win64/include/openssl",
+                "C:/opencv-mingw/include/opencv2"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "10.0.19041.0",
-            "compilerPath": "cl.exe",
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64"
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "windows-gcc-x64"
         }
     ],
     "version": 4

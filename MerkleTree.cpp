@@ -46,4 +46,3 @@ std::string MerkleTree::hash(const std::string& input) const {
 
     return oss.str();
 }
-//new

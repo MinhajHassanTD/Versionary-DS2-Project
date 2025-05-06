@@ -19,7 +19,7 @@ public:
     cv::Mat chunk;
 
 private:
-    bool isValidRegion(const cv::Rect& region) const; // Declaration of helper function
+    bool isValidRegion(const cv::Rect& region) const;
 };
 
 class Quadtree {
@@ -35,4 +35,3 @@ private:
 };
 
 #endif // QUADTREE_H
-//new
